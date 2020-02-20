@@ -8,11 +8,11 @@ require('dotenv').config();
 ///////////////////////////////
 
 const con = mysql.createConnection({
-    host: "127.0.0.1",
-    port: 3306,
-    user: "root",
+    host: process.env.DBHOST,
+    port: process.env.DBPORT,
+    user: process.env.DBUSER,
     password: process.env.DBPASSWORD,
-    database: "company_db"
+    database: process.env.DBNAME
 });
 
 con.connect(function (err) {
