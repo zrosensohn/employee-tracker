@@ -35,7 +35,9 @@ var initial = [
             return choices;
         },
         when: ({ choice }) => {
-            if (choice === "Delete Employee") {
+            if (choice === "Delete Employee"
+             || choice === "Update Employee Role"
+             || choice === "Update Employee Manager") {
                 return true;
             } else {
                 return false;
@@ -77,7 +79,8 @@ var initial = [
         when: ({ choice }) => {
             if (choice === "View All Employees by Department" 
              || choice === "View Total Utilized Budget by Department"
-             || choice === "Add Role") {
+             || choice === "Add Role"
+             || choice === "Delete Department") {
                 return true;
             } else {
                 return false;
@@ -119,6 +122,7 @@ var initial = [
         },
         when: ({ choice }) => {
             if (choice === "Add Employee"
+             || choice === "Update Employee Role"
              || choice === "Delete Role" ) {
                 return true;
             } else {
@@ -129,18 +133,37 @@ var initial = [
     {
         name: "manager",
         type: "list",
+        message: "Select Manager",
         choices: async function () {
             let managers = await q.queryCommand(f.allManagerQuery);
             let choices = await f.nameChoiceList(managers, "manager_first_name", "manager_last_name");
             return choices;
         },
         when: ({ choice }) => {
-            if (choice === "View All Employees by Manager"
-             || choice === "Add Employee") {
+            if (choice === "View All Employees by Manager") {
                 return true;
             } else {
                 return false;
             }
+        }
+    },
+    {
+        name: "newManager",
+        type: "list",
+        message: "Select Manager",
+        choices: async function() {
+            let managers = await q.queryCommand("SELECT first_name, last_name FROM employee");
+            let choices = await f.nameChoiceList(managers, "first_name", "last_name");
+            choices.push("Null");
+            return choices;
+        },
+        when: ({ choice }) => {
+            if (choice === "Add Employee"
+             || choice === "Update Employee Manager") {
+                 return true;
+             } else {
+                 return false;
+             }
         }
     }
 

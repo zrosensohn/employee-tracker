@@ -61,7 +61,7 @@ async function start() {
             break;
 
         case "Add Employee":
-            f.addEmployee(ans.first_name, ans.last_name, ans.role, ans.manager);
+            f.addEmployee(ans.first_name, ans.last_name, ans.role, ans.newManager);
             //DONE
             break;
        
@@ -71,11 +71,13 @@ async function start() {
             break;
         
         case "Update Employee Role":
-            f.updateRole();
+            f.updateEmpRole(ans.employee, ans.role);
+            //DONE
             break;
         
         case "Update Employee Manager":
-            f.updateManager();
+            f.updateEmpManager(ans.employee, ans.newManager);
+            //DONE
             break;
         
         case "View All Roles":
@@ -94,12 +96,12 @@ async function start() {
             break;
         
         case "View All Departments":
-            //DONE
             f.simpleQuery("SELECT * FROM department");
+            //DONE
             break;
         
         case "Delete Department":
-            f.deleteDepartment();
+            f.deleteDepartment(ans.department);
             break;
         
         case "View All Managers":

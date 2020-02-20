@@ -50,15 +50,12 @@ async function budgetByDept(dept) {
 /////////////////////////////////////////////////
 
 async function addEmployee(fName, lName, role, manager) {
-    let idQuery = await q.queryCommand("SELECT role_id FROM roles WHERE title = ?", [role]);
-    let role_id = idQuery[0].role_id;
+    let role_id = await IDbyRoleTitle(role);
     let manager_id;
-    if (manager === undefined) {
+    if (manager === "Null") {
         manager_id = null;
     } else {
-        let managerName = manager.split(" ");
-        let managerIdQuery = await q.queryCommand("SELECT employee_id FROM employee where first_name = ? AND last_name = ?", [managerName[0], managerName[1]]);
-        manager_id = managerIdQuery[0].employee_id;
+        manager_id = await IDbyManagerName(manager);
     }
     let query = "INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES(?, ?, ?, ?)"
     let addEmp = await q.queryCommand(query, [fName, lName, role_id, manager_id]); 
@@ -99,9 +96,45 @@ async function deleteRole(title) {
     q.start();
 }
 
-//DELETE FROM table_name WHERE condition;
+/////////////////////////////////////////////////
+// 9 // Update Employee Role
+/////////////////////////////////////////////////
 
+async function updateEmpRole(name, newRole) {
+    let empName = name.split(" ");
+    let role_id = await IDbyRoleTitle(newRole);
+    let update = await q.queryCommand("UPDATE employee SET role_id = ? WHERE first_name = ? AND last_name = ?", [role_id, empName[0], empName[1]]);
+    console.log(`${name}'s Role Successfully Updated to ${newRole} \n \n`);
+    q.start();
+}
 
+/////////////////////////////////////////////////
+// 10 // Update Employee Manager
+/////////////////////////////////////////////////
+
+async function updateEmpManager(name, newManager) {
+    let empName = name.split(" ");
+    let manager_id = await IDbyManagerName(newManager);
+    let update = await q.queryCommand("UPDATE employee SET manager_id = ? where first_name = ? and last_name = ?", [manager_id,  empName[0], empName[1]]);
+    console.log(`${name}'s Manager Successfully Updated to ${newManager} \n \n`);
+    q.start();
+}
+
+/////////////////////////////////////////////////
+// 11 // NUKE DEPARTMENT
+/////////////////////////////////////////////////
+
+async function deleteDepartment(deptName) {
+
+    let byDeptQuery = allEmpQuery + ' WHERE dept_name = ?;';
+    let res = await q.queryCommand(byDeptQuery, [deptName]);
+    res.forEach(async function (employee) {
+        let deleteEmp = await q.queryCommand("DELETE FROM employee WHERE employee_id = ?", [employee.employee_id]);
+        console.log(`${employee.first_name} ${employee.last_name} Terminated Successfully`);
+    });
+    console.log(`${deptName} has been succesfully terminated. Notfications are in their inboxes. Security guards have been notified \n \n`);
+    q.start();
+}
 
 //////////////////////
 // Utility functions
@@ -112,6 +145,26 @@ function initialCLI(){
     return inq.prompt(inqQuestions.initial);
 }
 
+//Get Role ID by title
+function IDbyRoleTitle(title) {
+    return new Promise(async function (resolve, reject) {
+        let idQuery = await q.queryCommand("SELECT role_id FROM roles WHERE title = ?", [title]);
+        if (idQuery.length === 0 || idQuery === undefined) return reject("No Role ID Found");
+        let role_id = idQuery[0].role_id;
+        return resolve(role_id);
+    })
+}
+
+//Get Manager ID by name
+function IDbyManagerName(manager){
+    return new Promise(async function (resolve, reject) {
+        let managerName = manager.split(" ");
+        let managerIdQuery = await q.queryCommand("SELECT employee_id FROM employee where first_name = ? AND last_name = ?", [managerName[0], managerName[1]]);
+        if(managerIdQuery.length === 0 || managerIdQuery === undefined) return reject("No Manager ID Found");
+        let manager_id = managerIdQuery[0].employee_id;
+        return resolve(manager_id);
+    })
+}
 
 //Return list of choices
 function choiceList(rowPacket, colName) {
@@ -145,6 +198,7 @@ function nameChoiceList(rowPacket, colName1, colName2) {
 var allEmpQuery = `SELECT emp.employee_id
 , emp.first_name
 , emp.last_name
+, roles.title
 , manager.first_name AS manager_first_name
 , manager.last_name AS manager_last_name
 , dept.dept_name AS department
@@ -183,6 +237,9 @@ module.exports.addEmployee = addEmployee;
 module.exports.deleteEmployee = deleteEmployee;
 module.exports.addRole = addRole;
 module.exports.deleteRole = deleteRole;
+module.exports.updateEmpRole = updateEmpRole;
+module.exports.updateEmpManager = updateEmpManager;
+module.exports.deleteDepartment = deleteDepartment;
 module.exports.simpleQuery = simpleQuery;
 
 ////////////////
@@ -190,4 +247,3 @@ module.exports.simpleQuery = simpleQuery;
 ////////////////
 module.exports.allEmpQuery = allEmpQuery;
 module.exports.allManagerQuery = allManagerQuery;
-module.exports.budgetQuery = budgetQuery;
